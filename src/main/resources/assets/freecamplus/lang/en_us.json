@@ -1,0 +1,21 @@
+{
+	"key.freecamplus.toggle": "Freecam",
+	"key.categories.freecamplus": "FreecamPlus",
+
+	"freecamplus.config.title": "FreecamPlus Settings",
+	"freecamplus.config.activationMode": "Activation Mode",
+	"freecamplus.config.activationMode.toggle": "Toggle",
+	"freecamplus.config.activationMode.hold": "Hold",
+	"freecamplus.config.speed": "Fly Speed",
+	"freecamplus.config.noClip": "No Clip",
+	"freecamplus.config.noClip.on": "No Clip: ON",
+	"freecamplus.config.noClip.off": "No Clip: OFF",
+	"freecamplus.config.hideHud": "Hide HUD in Freecam",
+	"freecamplus.config.hideHud.on": "Hide HUD: ON",
+	"freecamplus.config.hideHud.off": "Hide HUD: OFF",
+	"freecamplus.config.keybind": "Freecam Key",
+	"freecamplus.config.keybind.prompt": "> Press a key <",
+	"freecamplus.config.done": "Done",
+
+	"freecamplus.hud.active": "Freecam active"
+}

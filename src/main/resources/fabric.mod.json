@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "freecamplus",
+	"version": "${version}",
+	"name": "FreecamPlus",
+	"description": "A free-flying camera you can toggle or hold to fly around and look at your build/world without moving your actual player. Fully rebindable key, toggle or hold activation mode, and a config screen.",
+	"authors": [
+		"_Flex_Sky"
+	],
+	"contact": {
+		"homepage": "https://github.com/nthung-bot/FreecamPlus",
+		"sources": "https://github.com/nthung-bot/FreecamPlus",
+		"issues": "https://github.com/nthung-bot/FreecamPlus/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/freecamplus/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"dev.flexsky.freecamplus.FreecamPlusClient"
+		],
+		"modmenu": [
+			"dev.flexsky.freecamplus.gui.FreecamPlusModMenuIntegration"
+		]
+	},
+	"mixins": [
+		"freecamplus.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.0",
+		"fabric-api": "*",
+		"minecraft": "~1.21.11",
+		"java": ">=21"
+	},
+	"recommends": {
+		"modmenu": "*"
+	}
+}
