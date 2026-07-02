@@ -26,7 +26,7 @@ public abstract class CameraMixin {
 		FreecamController controller = FreecamPlusClient.CONTROLLER;
 		if (controller.isActive()) {
 			this.setRotation(controller.getYaw(), controller.getPitch());
-			this.setPosition(controller.getPosition());
+			this.setPosition(controller.getRenderPosition(tickDelta));
 		}
 	}
 }

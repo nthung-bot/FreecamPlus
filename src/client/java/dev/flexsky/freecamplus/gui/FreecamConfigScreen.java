@@ -27,7 +27,7 @@ public class FreecamConfigScreen extends Screen {
 	protected void init() {
 		FreecamConfig config = FreecamPlusClient.CONFIG;
 		int centerX = this.width / 2;
-		int y = this.height / 2 - 60;
+		int y = this.height / 2 - 96;
 
 		this.addRenderableWidget(CycleButton
 				.<FreecamConfig.ActivationMode>builder(
@@ -63,6 +63,43 @@ public class FreecamConfigScreen extends Screen {
 							config.speed = value;
 							config.save();
 						}));
+
+		y += 24;
+
+		this.addRenderableWidget(CycleButton
+				.onOffBuilder(config.smoothMovement)
+				.create(
+						centerX - 100,
+						y,
+						200,
+						20,
+						Component.translatable("freecamplus.config.smooth"),
+						(button, value) -> {
+							config.smoothMovement = value;
+							config.save();
+						}));
+
+		y += 24;
+
+		this.addRenderableWidget(CycleButton
+				.onOffBuilder(config.fullbright)
+				.create(
+						centerX - 100,
+						y,
+						200,
+						20,
+						Component.translatable("freecamplus.config.fullbright"),
+						(button, value) -> {
+							config.fullbright = value;
+							config.save();
+						}));
+
+		y += 24;
+
+		this.addRenderableWidget(Button.builder(Component.translatable("freecamplus.config.checkpoint"),
+						button -> this.minecraft.setScreen(new FreecamCheckpointScreen(this)))
+				.bounds(centerX - 100, y, 200, 20)
+				.build());
 
 		y += 24;
 

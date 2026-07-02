@@ -18,10 +18,36 @@ public class FreecamConfig {
 
 	public ActivationMode activationMode = ActivationMode.TOGGLE;
 	public double speed = 1.0D;
+	public boolean smoothMovement = true;
+	public boolean fullbright = true;
+	public String checkpointText = "Waypoint";
+	public CheckpointColor checkpointColor = CheckpointColor.YELLOW;
+	public String customColorHex = "FF8800";
 
 	public enum ActivationMode {
 		TOGGLE,
 		HOLD
+	}
+
+	public enum CheckpointColor {
+		WHITE("White", 0xFFFFFF),
+		RED("Red", 0xFF5555),
+		ORANGE("Orange", 0xFFAA00),
+		YELLOW("Yellow", 0xFFFF55),
+		GREEN("Green", 0x55FF55),
+		AQUA("Aqua", 0x55FFFF),
+		BLUE("Blue", 0x5599FF),
+		PURPLE("Purple", 0xC060FF),
+		PINK("Pink", 0xFF7EB6),
+		CUSTOM("Custom", 0xFFFFFF);
+
+		public final String label;
+		public final int rgb;
+
+		CheckpointColor(String label, int rgb) {
+			this.label = label;
+			this.rgb = rgb;
+		}
 	}
 
 	public static FreecamConfig load() {
@@ -29,6 +55,18 @@ public class FreecamConfig {
 			try (Reader reader = Files.newBufferedReader(PATH, StandardCharsets.UTF_8)) {
 				FreecamConfig loaded = GSON.fromJson(reader, FreecamConfig.class);
 				if (loaded != null) {
+					if (loaded.activationMode == null) {
+						loaded.activationMode = ActivationMode.TOGGLE;
+					}
+					if (loaded.checkpointText == null) {
+						loaded.checkpointText = "Waypoint";
+					}
+					if (loaded.checkpointColor == null) {
+						loaded.checkpointColor = CheckpointColor.YELLOW;
+					}
+					if (loaded.customColorHex == null) {
+						loaded.customColorHex = "FF8800";
+					}
 					return loaded;
 				}
 			} catch (IOException | JsonSyntaxException ignored) {

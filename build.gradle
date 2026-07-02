@@ -33,8 +33,10 @@ dependencies {
 	// Fabric API
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-	// Mod Menu (optional, compile-time only integration)
+	// Mod Menu (optional integration; present in the dev client for testing,
+	// but the released jar only recommends it)
 	modCompileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+	modLocalRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
 }
 
 processResources {

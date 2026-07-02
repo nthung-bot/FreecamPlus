@@ -8,14 +8,25 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
 public class FreecamController {
+	private static final double MIN_SPEED = 0.05;
+	private static final double MAX_SPEED = 50.0;
+	// blend factor per tick toward the target velocity; higher = snappier
+	private static final double SMOOTH_BLEND = 0.35;
+
 	private boolean active;
 	private Vec3 position = Vec3.ZERO;
+	private Vec3 prevPosition = Vec3.ZERO;
+	private Vec3 velocity = Vec3.ZERO;
 	private float yaw;
 	private float pitch;
 	private boolean wasNoGravity;
 
 	public boolean isActive() {
 		return this.active;
+	}
+
+	public boolean isFullbright() {
+		return this.active && FreecamPlusClient.CONFIG.fullbright;
 	}
 
 	public void toggle(Minecraft client) {
@@ -32,6 +43,8 @@ public class FreecamController {
 				return;
 			}
 			this.position = client.gameRenderer.getMainCamera().position();
+			this.prevPosition = this.position;
+			this.velocity = Vec3.ZERO;
 			this.yaw = player.getYRot();
 			this.pitch = player.getXRot();
 			this.wasNoGravity = player.isNoGravity();
@@ -43,6 +56,8 @@ public class FreecamController {
 			if (player != null) {
 				player.setNoGravity(this.wasNoGravity);
 			}
+			// persist any speed changes made with the scroll wheel
+			FreecamPlusClient.CONFIG.save();
 		}
 	}
 
@@ -52,6 +67,14 @@ public class FreecamController {
 		}
 		this.yaw = this.yaw + (float) (dx * 0.15);
 		this.pitch = Mth.clamp(this.pitch + (float) (dy * 0.15), -90.0F, 90.0F);
+	}
+
+	public void onScroll(double deltaY) {
+		if (!this.active) {
+			return;
+		}
+		FreecamConfig config = FreecamPlusClient.CONFIG;
+		config.speed = Mth.clamp(config.speed * Math.pow(1.15, deltaY), MIN_SPEED, MAX_SPEED);
 	}
 
 	public void tick(Minecraft client) {
@@ -65,67 +88,72 @@ public class FreecamController {
 		}
 		player.setDeltaMovement(Vec3.ZERO);
 
+		this.prevPosition = this.position;
+
 		FreecamConfig config = FreecamPlusClient.CONFIG;
 		Options options = client.options;
 
 		float forward = 0.0F;
 		float strafe = 0.0F;
 		float vertical = 0.0F;
-		if (options.keyUp.isDown()) {
-			forward += 1.0F;
-		}
-		if (options.keyDown.isDown()) {
-			forward -= 1.0F;
-		}
-		if (options.keyRight.isDown()) {
-			strafe += 1.0F;
-		}
-		if (options.keyLeft.isDown()) {
-			strafe -= 1.0F;
-		}
-		if (options.keyJump.isDown()) {
-			vertical += 1.0F;
-		}
-		if (options.keyShift.isDown()) {
-			vertical -= 1.0F;
-		}
-
-		if (forward == 0.0F && strafe == 0.0F && vertical == 0.0F) {
-			return;
+		if (client.screen == null) {
+			if (options.keyUp.isDown()) {
+				forward += 1.0F;
+			}
+			if (options.keyDown.isDown()) {
+				forward -= 1.0F;
+			}
+			if (options.keyRight.isDown()) {
+				strafe += 1.0F;
+			}
+			if (options.keyLeft.isDown()) {
+				strafe -= 1.0F;
+			}
+			if (options.keyJump.isDown()) {
+				vertical += 1.0F;
+			}
+			if (options.keyShift.isDown()) {
+				vertical -= 1.0F;
+			}
 		}
 
-		double yawRad = Math.toRadians(this.yaw);
-		double pitchRad = Math.toRadians(this.pitch);
-		double sinYaw = Math.sin(yawRad);
-		double cosYaw = Math.cos(yawRad);
-		double cosPitch = Math.cos(pitchRad);
-		double sinPitch = Math.sin(pitchRad);
+		Vec3 wishVelocity = Vec3.ZERO;
+		if (forward != 0.0F || strafe != 0.0F || vertical != 0.0F) {
+			double yawRad = Math.toRadians(this.yaw);
+			double pitchRad = Math.toRadians(this.pitch);
+			double sinYaw = Math.sin(yawRad);
+			double cosYaw = Math.cos(yawRad);
+			double cosPitch = Math.cos(pitchRad);
+			double sinPitch = Math.sin(pitchRad);
 
-		double forwardX = -sinYaw * cosPitch;
-		double forwardY = -sinPitch;
-		double forwardZ = cosYaw * cosPitch;
-		double rightX = cosYaw;
-		double rightZ = sinYaw;
+			double dx = (-sinYaw * cosPitch) * forward + cosYaw * strafe;
+			double dy = (-sinPitch) * forward + vertical;
+			double dz = (cosYaw * cosPitch) * forward + sinYaw * strafe;
 
-		double dx = forwardX * forward + rightX * strafe;
-		double dy = forwardY * forward + vertical;
-		double dz = forwardZ * forward + rightZ * strafe;
-
-		double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
-		if (length < 1.0E-4) {
-			return;
+			double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+			if (length > 1.0E-4) {
+				double speed = 0.6 * config.speed * (options.keySprint.isDown() ? 3.0 : 1.0);
+				wishVelocity = new Vec3(dx / length * speed, dy / length * speed, dz / length * speed);
+			}
 		}
 
-		double speed = 0.6 * config.speed * (options.keySprint.isDown() ? 3.0 : 1.0);
-		dx = dx / length * speed;
-		dy = dy / length * speed;
-		dz = dz / length * speed;
+		if (config.smoothMovement) {
+			this.velocity = this.velocity.lerp(wishVelocity, SMOOTH_BLEND);
+			if (this.velocity.lengthSqr() < 1.0E-6 && wishVelocity.lengthSqr() == 0.0) {
+				this.velocity = Vec3.ZERO;
+			}
+		} else {
+			this.velocity = wishVelocity;
+		}
 
-		this.position = this.position.add(dx, dy, dz);
+		this.position = this.position.add(this.velocity);
 	}
 
-	public Vec3 getPosition() {
-		return this.position;
+	public Vec3 getRenderPosition(float partialTick) {
+		return new Vec3(
+				Mth.lerp(partialTick, this.prevPosition.x, this.position.x),
+				Mth.lerp(partialTick, this.prevPosition.y, this.position.y),
+				Mth.lerp(partialTick, this.prevPosition.z, this.position.z));
 	}
 
 	public float getYaw() {
